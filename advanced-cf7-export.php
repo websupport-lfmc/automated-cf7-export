@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.1
+Version: 1.0.2
 Author: LFMC
 */
 
@@ -251,11 +251,18 @@ function acf7_export_options_page_html() {
         }
     }
 
+    if (isset($_POST['acf7_clear_options'])) {
+        delete_option('acf7_export_options');
+        $message = '<div class="updated"><p>All options have been cleared.</p></div>';
+    }
+
     ?>
     <div class="wrap">
         <h1>Automated CF7 Export Settings</h1>
         <?php if ($message) echo $message; ?>
-        <form method="post" action="">
+        
+        <!-- Form for updating settings -->
+        <form method="post" action="options.php" id="acf7_export_settings_form">
             <?php
             settings_fields('acf7_export_options_group');
             $options = get_option('acf7_export_options');
@@ -286,10 +293,42 @@ function acf7_export_options_page_html() {
             </table>
             <p class="submit">
                 <?php submit_button('Save Changes', 'primary', 'submit', false); ?>
+            </p>
+        </form>
+
+        <!-- Form to start/stop schedule sending -->
+        <form method="post" action="">
+            <h2>Schedule Sending</h2>
+            <p>Use the button below to start or stop scheduled sending of CF7 submissions.</p>
+            <p class="submit">
                 <button type="submit" name="acf7_toggle_schedule" class="button button-secondary"><?php echo wp_next_scheduled('send_cf7_email_event') ? 'Cancel Scheduled Sending' : 'Start Scheduled Sending'; ?></button>
             </p>
         </form>
+
+        <!-- Form to clear all options -->
+        <form method="post" action="" onsubmit="return confirm('Are you sure you want to clear all options?');">
+            <h2>Clear All Options</h2>
+            <p>Use the button below to clear all options. This action cannot be undone.</p>
+            <p class="submit">
+                <button type="submit" name="acf7_clear_options" class="button button-secondary" style="background-color: red; color: white; border-color: red;">Clear All Options</button>
+            </p>
+        </form>
     </div>
+
+    <script type="text/javascript">
+        document.getElementById('acf7_export_settings_form').onsubmit = function() {
+            var exportEmails = document.querySelector('[name="acf7_export_options[export_emails]"]').value;
+            var testEmail = document.querySelector('[name="acf7_export_options[test_email]"]').value;
+            var testLimit = document.querySelector('[name="acf7_export_options[test_limit]"]').value;
+
+            if (!exportEmails || !testEmail || !testLimit) {
+                alert('Please fill out all fields before saving.');
+                return false;
+            }
+
+            return true;
+        };
+    </script>
     <?php
 }
 
