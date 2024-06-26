@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.2
+Version: 1.0.3
 Author: LFMC
 */
 
@@ -42,6 +42,14 @@ function fetch_cf7_data($limit = false) {
     $forms_data = [];
     
     foreach ($form_ids as $form_id) {
+        $interval = '1 MONTH'; // default to monthly
+        $options = get_option('acf7_export_options');
+        if ($options['schedule_frequency'] === 'weekly') {
+            $interval = '1 WEEK';
+        } elseif ($options['schedule_frequency'] === 'daily') {
+            $interval = '1 DAY';
+        }
+
         $query = "
             SELECT 
                 vdata.id AS entry_id, 
@@ -52,7 +60,7 @@ function fetch_cf7_data($limit = false) {
             JOIN $entry_table AS entry 
             ON vdata.id = entry.data_id
             WHERE entry.cf7_id = %d
-            AND vdata.created >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+            AND vdata.created >= DATE_SUB(NOW(), INTERVAL $interval)
             ORDER BY vdata.created DESC
         ";
 
@@ -128,8 +136,25 @@ function send_cf7_email($limit = false) {
     if (empty($to)) {
         return;
     }
-    $subject = 'Scheduled CF7 Submissions';
-    $body = 'Please find the attached CSV files with the submissions.';
+    $frequency = isset($options['schedule_frequency']) ? $options['schedule_frequency'] : 'monthly';
+    $site_name = get_bloginfo('name');
+    $subject = "Scheduled CF7 Submissions for $site_name";
+    $body = "Here's a $frequency update on the form submissions for $site_name:<br><br>";
+
+    // Fetch form data and generate table
+    $forms_data = fetch_cf7_data($limit);
+    $body .= "<table border='1' cellpadding='5' cellspacing='0' style='text-align: left;'>";
+	$body .= "<tr><th style='text-align: left;'>Form Name</th><th style='text-align: left;'>Total " . ucfirst($frequency) . " Submissions</th></tr>";
+    foreach ($forms_data as $form_id => $entries) {
+        $form_title = get_form_title($form_id);
+        $unique_entry_ids = array_unique(array_column($entries, 'entry_id'));
+        $total_submissions = count($unique_entry_ids);
+        $body .= "<tr><td style='text-align: left;'>$form_title</td><td style='text-align: left;'>$total_submissions</td></tr>";
+    }
+    $body .= "</table><br><br>";
+
+    $test_email = isset($options['test_email']) ? $options['test_email'] : '';
+    $body .= "For further information about the export, please reach out to $test_email.";
     $headers = array('Content-Type: text/html; charset=UTF-8');
     $attachments = export_cf7_data_to_csv($limit);
 
@@ -269,11 +294,11 @@ function acf7_export_options_page_html() {
             ?>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row">Export Emails</th>
+                    <th scope="row">Receiving Email Addresses</th>
                     <td><input type="text" name="acf7_export_options[export_emails]" value="<?php echo isset($options['export_emails']) ? esc_attr($options['export_emails']) : ''; ?>" /></td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Test Export Email</th>
+                    <th scope="row">Admin &amp; Test Email Address</th>
                     <td><input type="text" name="acf7_export_options[test_email]" value="<?php echo isset($options['test_email']) ? esc_attr($options['test_email']) : ''; ?>" /></td>
                 </tr>
                 <tr valign="top">
