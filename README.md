@@ -49,11 +49,11 @@ This plugin includes automatic update functionality using the [GitHub Plugin Upd
 
 ## Changelog
 
-### 1.0
+### 1.0.0
 - Initial commit.
 - Added support for automatic updates using GitHub Updater.
 
-### 1.0.2
+### 1.0.1
 - Fixed support for automatic updates using GitHub Updater.
 
 ## License
