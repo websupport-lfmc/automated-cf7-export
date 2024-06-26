@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 
 // Plugin Update Checker
 require 'plugin-update-checker/plugin-update-checker.php';
+
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
@@ -23,14 +24,16 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 $myUpdateChecker->setBranch('main');
 
 // Function to fetch form titles
-function get_form_title($cf7_id) {
+function get_form_title($cf7_id)
+{
     global $wpdb;
     $form_title = $wpdb->get_var($wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = %d", $cf7_id));
     return $form_title ? sanitize_file_name($form_title) : "form_$cf7_id";
 }
 
 // Function to fetch and link data from the database
-function fetch_cf7_data($limit = false) {
+function fetch_cf7_data($limit = false)
+{
     global $wpdb;
 
     $vdata_table = $wpdb->prefix . 'cf7_vdata';
@@ -40,7 +43,7 @@ function fetch_cf7_data($limit = false) {
     $form_ids = $wpdb->get_col("SELECT DISTINCT cf7_id FROM $entry_table");
 
     $forms_data = [];
-    
+
     foreach ($form_ids as $form_id) {
         $interval = '1 MONTH'; // default to monthly
         $options = get_option('acf7_export_options');
@@ -71,7 +74,7 @@ function fetch_cf7_data($limit = false) {
             if (count($entry_ids) > $limit) {
                 $entry_ids = array_slice($entry_ids, 0, $limit);
             }
-            $results = array_filter($results, function($entry) use ($entry_ids) {
+            $results = array_filter($results, function ($entry) use ($entry_ids) {
                 return in_array($entry->entry_id, $entry_ids);
             });
         }
@@ -85,7 +88,8 @@ function fetch_cf7_data($limit = false) {
 }
 
 // Function to export data to CSV
-function export_cf7_data_to_csv($limit = false) {
+function export_cf7_data_to_csv($limit = false)
+{
     $forms_data = fetch_cf7_data($limit);
     $csv_files = [];
 
@@ -130,7 +134,8 @@ function export_cf7_data_to_csv($limit = false) {
 }
 
 // Function to send email with CSV attachment
-function send_cf7_email($limit = false) {
+function send_cf7_email($limit = false)
+{
     $options = get_option('acf7_export_options');
     $to = isset($options['export_emails']) ? $options['export_emails'] : '';
     if (empty($to)) {
@@ -138,13 +143,13 @@ function send_cf7_email($limit = false) {
     }
     $frequency = isset($options['schedule_frequency']) ? $options['schedule_frequency'] : 'monthly';
     $site_name = get_bloginfo('name');
-    $subject = "Scheduled CF7 Submissions for $site_name";
+    $subject = ucfirst($frequency) . " Form Submissions for $site_name";
     $body = "Here's a $frequency update on the form submissions for $site_name:<br><br>";
 
     // Fetch form data and generate table
     $forms_data = fetch_cf7_data($limit);
     $body .= "<table border='1' cellpadding='5' cellspacing='0' style='text-align: left;'>";
-	$body .= "<tr><th style='text-align: left;'>Form Name</th><th style='text-align: left;'>Total " . ucfirst($frequency) . " Submissions</th></tr>";
+    $body .= "<tr><th style='text-align: left;'>Form Name</th><th style='text-align: left;'>Total " . ucfirst($frequency) . " Submissions</th></tr>";
     foreach ($forms_data as $form_id => $entries) {
         $form_title = get_form_title($form_id);
         $unique_entry_ids = array_unique(array_column($entries, 'entry_id'));
@@ -162,13 +167,14 @@ function send_cf7_email($limit = false) {
 }
 
 // Schedule the email function
-function schedule_cf7_email_event() {
+function schedule_cf7_email_event()
+{
     $options = get_option('acf7_export_options');
     $frequency = isset($options['schedule_frequency']) ? $options['schedule_frequency'] : 'monthly';
     $emails = isset($options['export_emails']) ? $options['export_emails'] : '';
 
     if (empty($emails)) {
-        add_action('admin_notices', function() {
+        add_action('admin_notices', function () {
             echo '<div class="notice notice-error"><p>Error: No email address provided for CF7 export.</p></div>';
         });
         return;
@@ -186,7 +192,8 @@ function schedule_cf7_email_event() {
 }
 
 // Clear scheduled event
-function clear_cf7_email_schedule() {
+function clear_cf7_email_schedule()
+{
     $timestamp = wp_next_scheduled('send_cf7_email_event');
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'send_cf7_email_event');
@@ -196,13 +203,15 @@ function clear_cf7_email_schedule() {
 add_action('wp', 'schedule_cf7_email_event');
 
 // Register settings
-function acf7_export_register_settings() {
+function acf7_export_register_settings()
+{
     register_setting('acf7_export_options_group', 'acf7_export_options', 'acf7_export_options_validate');
 }
 add_action('admin_init', 'acf7_export_register_settings');
 
 // Validate and sanitize settings
-function acf7_export_options_validate($input) {
+function acf7_export_options_validate($input)
+{
     $output = [];
 
     $output['export_emails'] = sanitize_text_field($input['export_emails']);
@@ -229,7 +238,8 @@ function acf7_export_options_validate($input) {
 }
 
 // Add options page
-function acf7_export_options_page() {
+function acf7_export_options_page()
+{
     add_menu_page(
         'Automated CF7 Export',
         'CF7 Export',
@@ -260,7 +270,8 @@ function acf7_export_options_page() {
 }
 add_action('admin_menu', 'acf7_export_options_page');
 
-function acf7_export_options_page_html() {
+function acf7_export_options_page_html()
+{
     if (!current_user_can('manage_options')) {
         return;
     }
@@ -281,11 +292,11 @@ function acf7_export_options_page_html() {
         $message = '<div class="updated"><p>All options have been cleared.</p></div>';
     }
 
-    ?>
+?>
     <div class="wrap">
         <h1>Automated CF7 Export Settings</h1>
         <?php if ($message) echo $message; ?>
-        
+
         <!-- Form for updating settings -->
         <form method="post" action="options.php" id="acf7_export_settings_form">
             <?php
@@ -354,11 +365,12 @@ function acf7_export_options_page_html() {
             return true;
         };
     </script>
-    <?php
+<?php
 }
 
 // Add test email button in admin interface
-function test_email_button_callback() {
+function test_email_button_callback()
+{
     $options = get_option('acf7_export_options');
     $test_email = isset($options['test_email']) ? $options['test_email'] : '';
     $test_limit = isset($options['test_limit']) ? $options['test_limit'] : 1;
