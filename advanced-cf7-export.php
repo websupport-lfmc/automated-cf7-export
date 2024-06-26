@@ -15,7 +15,7 @@ require 'plugin-update-checker/plugin-update-checker.php';
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
-    'https://github.com/websupport-lfmc/Automated-CF7-Export',
+    'https://github.com/websupport-lfmc/automated-cf7-export',
     __FILE__,
     'automated-cf7-export'
 );
