@@ -346,7 +346,7 @@ function acf7_export_options_page_html()
             <h2>Clear All Options</h2>
             <p>Use the button below to clear all options. This action cannot be undone.</p>
             <p class="submit">
-                <button type="submit" name="acf7_clear_options" class="button button-secondary" style="background-color: red; color: white; border-color: red;">Clear All Options</button>
+                <button type="submit" name="acf7_clear_options" class="button button-secondary" style="background-color: #d63638; color: white; border-color: #d63638;">Clear All Options</button>
             </p>
         </form>
     </div>
