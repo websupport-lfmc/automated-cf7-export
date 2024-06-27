@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.4
+Version: 1.0.5
 Author: LFMC
 */
 
