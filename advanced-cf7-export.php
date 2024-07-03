@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.7
+Version: 1.0.8
 Author: LFMC
 */
 
@@ -188,6 +188,9 @@ function send_cf7_email($limit = false)
     wp_mail($to, $subject, $body, $headers, $attachments);
 }
 
+// Hook the scheduled event to the send_cf7_email function
+add_action('send_cf7_email_event', 'send_cf7_email');
+
 // Schedule the email function
 function schedule_cf7_email_event()
 {
@@ -215,6 +218,7 @@ function schedule_cf7_email_event()
         log_cf7_export("CF7 email event is already scheduled.");
     }
 }
+
 
 // Clear scheduled event
 function clear_cf7_email_schedule()
