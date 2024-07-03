@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.5
+Version: 1.0.6
 Author: LFMC
 */
 
@@ -149,13 +149,18 @@ function send_cf7_email($limit = false)
     // Fetch form data and generate table
     $forms_data = fetch_cf7_data($limit);
     $body .= "<table border='1' cellpadding='5' cellspacing='0' style='text-align: left;'>";
-    $body .= "<tr><th style='text-align: left;'>Form Name</th><th style='text-align: left;'>Total " . ucfirst($frequency) . " Submissions</th></tr>";
+    $body .= "<tr><th style='text-align: left;'>Form Name</th><th style='text-align: left;'>Number of " . ucfirst($frequency) . " Submissions</th></tr>";
+
+    $total_submissions = 0;
     foreach ($forms_data as $form_id => $entries) {
         $form_title = get_form_title($form_id);
         $unique_entry_ids = array_unique(array_column($entries, 'entry_id'));
-        $total_submissions = count($unique_entry_ids);
-        $body .= "<tr><td style='text-align: left;'>$form_title</td><td style='text-align: left;'>$total_submissions</td></tr>";
+        $form_submissions = count($unique_entry_ids);
+        $total_submissions += $form_submissions;
+        $body .= "<tr><td style='text-align: left;'>$form_title</td><td style='text-align: left;'>$form_submissions</td></tr>";
     }
+
+    $body .= "<tr><th style='text-align: left;'>Total Weekly Submissions (All Forms)</th><th style='text-align: left;'>$total_submissions</th></tr>";
     $body .= "</table><br><br>";
 
     $test_email = isset($options['test_email']) ? $options['test_email'] : '';
