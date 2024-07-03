@@ -2,7 +2,7 @@
 /*
 Plugin Name: Automated CF7 Export
 Description: Automates the export of Contact Form 7 submissions to CSV and emails them on a scheduled basis.
-Version: 1.0.6
+Version: 1.0.7
 Author: LFMC
 */
 
@@ -22,6 +22,18 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 );
 
 $myUpdateChecker->setBranch('main');
+
+// Plugin logging
+function log_cf7_export($message)
+{
+    if (WP_DEBUG === true) {
+        if (is_array($message) || is_object($message)) {
+            error_log(print_r($message, true));
+        } else {
+            error_log($message);
+        }
+    }
+}
 
 // Function to fetch form titles
 function get_form_title($cf7_id)
@@ -136,11 +148,15 @@ function export_cf7_data_to_csv($limit = false)
 // Function to send email with CSV attachment
 function send_cf7_email($limit = false)
 {
+    log_cf7_export("CF7 email event triggered.");
+
     $options = get_option('acf7_export_options');
     $to = isset($options['export_emails']) ? $options['export_emails'] : '';
     if (empty($to)) {
+        log_cf7_export("No email address provided for CF7 export.");
         return;
     }
+
     $frequency = isset($options['schedule_frequency']) ? $options['schedule_frequency'] : 'monthly';
     $site_name = get_bloginfo('name');
     $subject = ucfirst($frequency) . " Form Submissions for $site_name";
@@ -168,6 +184,7 @@ function send_cf7_email($limit = false)
     $headers = array('Content-Type: text/html; charset=UTF-8');
     $attachments = export_cf7_data_to_csv($limit);
 
+    log_cf7_export("Sending email to: $to");
     wp_mail($to, $subject, $body, $headers, $attachments);
 }
 
@@ -186,6 +203,7 @@ function schedule_cf7_email_event()
     }
 
     if (!wp_next_scheduled('send_cf7_email_event')) {
+        log_cf7_export("Scheduling CF7 email event for frequency: $frequency");
         if ($frequency === 'weekly') {
             wp_schedule_event(strtotime('next Monday'), 'weekly', 'send_cf7_email_event');
         } elseif ($frequency === 'daily') {
@@ -193,6 +211,8 @@ function schedule_cf7_email_event()
         } else {
             wp_schedule_event(strtotime('first day of next month midnight'), 'monthly', 'send_cf7_email_event');
         }
+    } else {
+        log_cf7_export("CF7 email event is already scheduled.");
     }
 }
 
