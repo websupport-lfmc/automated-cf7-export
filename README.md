@@ -47,15 +47,6 @@ The Automated CF7 Export plugin helps you streamline the management of Contact F
 
 This plugin includes automatic update functionality using the [GitHub Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker). Ensure your plugin stays up to date with the latest features and fixes by leveraging this update checker.
 
-## Changelog
-
-### 1.0.0
-- Initial commit.
-- Added support for automatic updates using GitHub Updater.
-
-### 1.0.1
-- Fixed support for automatic updates using GitHub Updater.
-
 ## License
 
 Automated CF7 Export is licensed under the GNU General Public License v2.0. You may obtain a copy of the License at http://www.gnu.org/licenses/gpl-2.0.html.
